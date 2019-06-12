@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="@string/setting">
+
+        <Preference
+            android:key="path"
+            android:summary="/sdcard/Download"
+            android:title="@string/setting_path" />
+        <EditTextPreference
+            android:defaultValue="%name% - %artist%"
+            android:dialogMessage="@string/setting_format_message"
+            android:key="format"
+            android:summary="%song% - %author%"
+            android:title="@string/setting_format" />
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="isConfirm"
+            android:summaryOff="@string/setting_isConfirm_off"
+            android:summaryOn="@string/setting_isConfirm_on"
+            android:title="@string/setting_isConfirm" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:title="@string/about">
+        <Preference
+            android:title="@string/version"
+            android:summary="1.0.0"/>
+        <Preference
+            android:title="@string/author"
+            android:summary="小さな手は"/>
+    </PreferenceCategory>
+
+
+</PreferenceScreen>

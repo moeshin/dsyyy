@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">屌丝云音乐</string>
+
+    <string name="directory_selector_dialog_title">选择文件夹</string>
+    <string name="directory_selector_dialog_parent">上一级</string>
+    <string name="directory_selector_dialog_button_select">选择</string>
+
+    <string name="setting_path">下载路径</string>
+    <string name="setting_format">歌曲文件名格式</string>
+    <string name="setting_format_message">名称：%name%\n艺术家：%artist%\n专辑：%album%\n\n支持文件夹，例如：\n%artist%/%name%</string>
+    <string name="setting_isConfirm">下载前是否确认</string>
+    <string name="setting_isConfirm_off">每次下载前不会提示确认</string>
+    <string name="setting_isConfirm_on">每次下载前都会提示确认</string>
+
+    <string name="alert_confirm_name_msg">请确认，可自行修改：</string>
+    <string name="alert_file_exists_msg">文件已存在是否覆盖？</string>
+    <string name="alert_loading">加载中。。。</string>
+    <string name="alert_delete_fail">删除失败</string>
+
+    <string name="about">关于</string>
+    <string name="retry">重试</string>
+    <string name="skip">跳过</string>
+    <string name="version">版本</string>
+    <string name="setting">设置</string>
+    <string name="author">作者</string>
+
+</resources>
