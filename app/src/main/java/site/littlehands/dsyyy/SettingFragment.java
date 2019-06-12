@@ -47,6 +47,9 @@ public class SettingFragment extends PreferenceFragment
                 sharedPreferences.getString(SettingUtils.KEY_FORMAT, "%song% - %author%")
         );
 
+        preference = findPreference("version");
+        preference.setSummary(BuildConfig.VERSION_NAME);
+
     }
 
     @Override

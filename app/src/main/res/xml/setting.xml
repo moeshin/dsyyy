@@ -23,6 +23,7 @@
     <PreferenceCategory
         android:title="@string/about">
         <Preference
+            android:key="version"
             android:title="@string/version"
             android:summary="1.0.0"/>
         <Preference
