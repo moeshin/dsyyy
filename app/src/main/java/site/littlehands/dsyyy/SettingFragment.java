@@ -44,7 +44,7 @@ public class SettingFragment extends PreferenceFragment
         preference = findPreference(SettingUtils.KEY_FORMAT);
         preference.setOnPreferenceChangeListener(this);
         preference.setSummary(
-                sharedPreferences.getString(SettingUtils.KEY_FORMAT, "%song% - %author%")
+                sharedPreferences.getString(SettingUtils.KEY_FORMAT, SettingUtils.FORMAT_DEFAULT)
         );
 
         preference = findPreference("version");

@@ -169,7 +169,7 @@ public class ReceiveActivity extends Activity {
 
 
         String tmp = preferences.getString(SettingUtils.KEY_PATH, null);
-        String format = preferences.getString(SettingUtils.KEY_FORMAT, "%song% - %author%");
+        String format = preferences.getString(SettingUtils.KEY_FORMAT, SettingUtils.FORMAT_DEFAULT);
 
         if (tmp == null) {
             tmp = Environment.getExternalStorageDirectory().getPath();

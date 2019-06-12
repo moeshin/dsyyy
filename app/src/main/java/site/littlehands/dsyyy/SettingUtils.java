@@ -14,6 +14,8 @@ class SettingUtils {
 
     private static final Pattern PATTERN = Pattern.compile("%[a-z]*%");
 
+    static final String FORMAT_DEFAULT = "%name% - %artist%";
+
     static String format(String format, String song, String author, String album) {
 
         Matcher matcher = PATTERN.matcher(format);
