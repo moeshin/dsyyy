@@ -24,4 +24,6 @@
     <string name="setting">设置</string>
     <string name="author">作者</string>
 
+    <string name="network_error">网络错误</string>
+
 </resources>

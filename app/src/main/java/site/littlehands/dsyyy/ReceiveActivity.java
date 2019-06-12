@@ -21,19 +21,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.ResponseBody;
 import site.littlehands.app.DirectorySelectorDialog;
 
 public class ReceiveActivity extends Activity {
@@ -107,33 +103,26 @@ public class ReceiveActivity extends Activity {
             @Override
             public void run() {
                 try {
-                    URL url = new URL("http://api.littlehands.site/dsyyy/?id=" + id);
-                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                    connection.connect();
-
-                    InputStream is = connection.getInputStream();
-                    InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8);
-                    BufferedReader reader = new BufferedReader(isr);
-
-                    StringBuilder json = new StringBuilder();
-                    String tmp;
-                    while ((tmp = reader.readLine()) != null) {
-                        json.append(tmp);
+                    OkHttpClient okHttpClient = new OkHttpClient();
+                    Request request = new Request.Builder()
+                            .url("https://api.littlehands.site/dsyyy/?id=" + id)
+                            .build();
+                    ResponseBody body = okHttpClient.newCall(request).execute().body();
+                    if (body != null) {
+                        parseJson(body.string());
+                    } else {
+                        new AlertDialog.Builder(ReceiveActivity.this)
+                                .setMessage(R.string.network_error)
+                                .setPositiveButton(android.R.string.ok, onCancel)
+                                .setCancelable(false)
+                                .show();
                     }
-
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             alertDialog.dismiss();
                         }
                     });
-
-                    parseJson(json.toString());
-                    reader.close();
-                    isr.close();
-                    is.close();
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
