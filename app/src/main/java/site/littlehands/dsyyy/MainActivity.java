@@ -17,6 +17,13 @@ public class MainActivity extends BaseActivity {
         setContentView(R.layout.activity_main);
 
         requestPermissions(new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE});
+
+        // Test
+//        Intent intent = new Intent(this, ReceiveActivity.class)
+//                .setAction(Intent.ACTION_SEND)
+//                .setType("text/plain")
+//                .putExtra(Intent.EXTRA_TEXT, "分享Roger Subirana的单曲《Between Worlds》: http://music.163.com/song/28661549/?userid=412128285 (来自@网易云音乐)");
+//        startActivity(intent);
     }
 
     @Override
