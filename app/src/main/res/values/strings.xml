@@ -26,4 +26,7 @@
 
     <string name="network_error">网络错误</string>
 
+    <string name="format_br">比特率：%s</string>
+    <string name="format_size">大小：%s</string>
+
 </resources>

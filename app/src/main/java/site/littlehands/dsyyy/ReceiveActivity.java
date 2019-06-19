@@ -31,11 +31,19 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
 import site.littlehands.app.DirectorySelectorDialog;
+import site.littlehands.util.NeteaseMusicAPI;
+import site.littlehands.util.UnitSelector;
 
 public class ReceiveActivity extends Activity {
 
 
     private String TAG = "ReceiveActivity";
+
+    private SharedPreferences preferences;
+
+    private boolean isConfirm;
+
+    private String format;
 
     private final DialogInterface.OnClickListener onCancel = new DialogInterface.OnClickListener() {
         @Override
@@ -65,6 +73,11 @@ public class ReceiveActivity extends Activity {
         String action = intent.getAction();
         String type = intent.getType();
 
+        preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        isConfirm = preferences.getBoolean("isConfirm", true);
+        format = preferences.getString(SettingUtils.KEY_FORMAT, SettingUtils.FORMAT_DEFAULT);
+
+
         // 获取分享文本
         Log.d(TAG, "Action: " + action);
         Log.d(TAG, "Type: " + type);
@@ -80,7 +93,7 @@ public class ReceiveActivity extends Activity {
                 if (matcher.find()) {
                     String id = matcher.group(1);
                     Log.d(TAG, "ID: " + id);
-                    parseId(id);
+                    handleId(id);
                     return;
                 }
             }
@@ -89,87 +102,104 @@ public class ReceiveActivity extends Activity {
         startActivity(new Intent(this, MainActivity.class));
     }
 
-    private void parseId(final String id) {
-
+    private void handleId(final String id) {
         @SuppressLint("InflateParams")
         final AlertDialog alertDialog = new AlertDialog.Builder(this)
                 .setView(getLayoutInflater().inflate(R.layout.alert_loading, null))
                 .setCancelable(false)
                 .show();
-
-
-
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    OkHttpClient okHttpClient = new OkHttpClient();
-                    Request request = new Request.Builder()
-                            .url("https://api.littlehands.site/dsyyy/?id=" + id)
-                            .build();
-                    ResponseBody body = okHttpClient.newCall(request).execute().body();
-                    if (body != null) {
-                        parseJson(body.string());
-                    } else {
-                        new AlertDialog.Builder(ReceiveActivity.this)
-                                .setMessage(R.string.network_error)
-                                .setPositiveButton(android.R.string.ok, onCancel)
-                                .setCancelable(false)
-                                .show();
+                handleDetails(httpGetString(NeteaseMusicAPI.details(id)));
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        alertDialog.dismiss();
                     }
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            alertDialog.dismiss();
-                        }
-                    });
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                });
             }
         }).start();
     }
 
-    private void parseJson(String json) {
+    public String httpGetString(String url) {
         try {
-            JSONObject obj = new JSONObject(json);
-            if (obj.getInt("code") == 1) {
-                JSONObject data = obj.getJSONObject("data");
-                preDownload(
-                        data.getString("url"),
-                        data.getString("name"),
-                        getArtist(data),
-                        data.getString("album")
-                );
+            OkHttpClient okHttpClient = new OkHttpClient();
+            Request request = new Request.Builder()
+                    .url(url)
+                    .build();
+            ResponseBody body = okHttpClient.newCall(request).execute().body();
+            if (body != null) {
+                return body.string();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @SuppressWarnings("UnnecessaryContinue")
+    private void handleDetails(String details) {
+        if (details == null) {
+            new AlertDialog.Builder(ReceiveActivity.this)
+                    .setMessage(R.string.network_error)
+                    .setPositiveButton(android.R.string.ok, onCancel)
+                    .setCancelable(false)
+                    .show();
+            return;
+        }
+        try {
+            JSONObject json = new JSONObject(details);
+            JSONArray songs = json.getJSONArray("songs");
+
+            int length = songs.length();
+            for (int i = 0; i < length; i++) {
+                try {
+                    JSONObject song = songs.getJSONObject(i);
+                    String name = song.getString("name");
+                    String artists = NeteaseMusicAPI.artistsToString(song);
+                    String album = song.getJSONObject("al").getString("name");
+                    int id = song.getInt("id");
+
+
+                    JSONObject data = new JSONObject(httpGetString(NeteaseMusicAPI.urls(9999999, id)))
+                            .getJSONArray("data")
+                            .getJSONObject(0);
+
+                    String url = data.getString("url");
+                    int br = data.getInt("br");
+                    int size = data.getInt("size");
+
+                    preDownload(
+                            url,
+                            br,
+                            size,
+                            name,
+                            artists,
+                            album
+                    );
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    continue;
+                }
+
             }
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
 
-    private String getArtist(JSONObject data) throws JSONException {
-        JSONArray artists = data.getJSONArray("artist");
-        StringBuilder artist = new StringBuilder();
-        int size = artists.length();
-        for (int i = 0; i < size; i++) {
-            if (i > 0) {
-                artist.append(',');
-            }
-            artist.append(artists.getString(i));
-        }
-        return artist.toString();
-    }
-
     private String getSuffix(String str) {
         return str.substring(str.lastIndexOf('.'));
     }
 
-    private void preDownload(final String url, final String name, String artist, String album) {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+    private void preDownload(
+            final String url, final int br, final int size,
+            final String name, String artist, String album
+    ) {
 
 
         String tmp = preferences.getString(SettingUtils.KEY_PATH, null);
-        String format = preferences.getString(SettingUtils.KEY_FORMAT, SettingUtils.FORMAT_DEFAULT);
 
         if (tmp == null) {
             tmp = Environment.getExternalStorageDirectory().getPath();
@@ -177,9 +207,13 @@ public class ReceiveActivity extends Activity {
 
         final String path = tmp;
 
-        final String fileName = SettingUtils.format(Objects.requireNonNull(format), name, artist, album) + getSuffix(url);
+        final String fileName = SettingUtils.format(Objects.requireNonNull(format),
+                name.replace('/', '／'),
+                artist.replace('/', '／'),
+                album.replace('/', '／')
+        ) + getSuffix(url);
 
-        if (preferences.getBoolean("isConfirm", true)) {
+        if (isConfirm) {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -191,10 +225,14 @@ public class ReceiveActivity extends Activity {
 
                     final EditText editText = view.findViewById(R.id.edit);
                     final TextView pathView = view.findViewById(R.id.path);
+                    TextView brView = view.findViewById(R.id.br);
+                    TextView sizeView = view.findViewById(R.id.size);
 
                     editText.setText(fileName);
                     pathView.setText(path);
                     pathView.setOnClickListener(onPathViewClick);
+                    brView.setText(getString(R.string.format_br, UnitSelector.bitRate(br)));
+                    sizeView.setText(getString(R.string.format_size, UnitSelector.Byte(size)));
 
                     new AlertDialog.Builder(ReceiveActivity.this)
                             .setTitle(R.string.alert_confirm_name_msg)
@@ -202,9 +240,14 @@ public class ReceiveActivity extends Activity {
                             .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    String path = pathView.getText().toString();
-                                    String name = editText.getText().toString();
-                                    confirmPath(url, path, name);
+                                    new Thread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            String path = pathView.getText().toString();
+                                            String name = editText.getText().toString();
+                                            confirmPath(url, path, name);
+                                        }
+                                    }).start();
                                 }
                             })
                             .setNegativeButton(android.R.string.cancel, onCancel)
@@ -224,7 +267,7 @@ public class ReceiveActivity extends Activity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    final AlertDialog alertDialog = new AlertDialog.Builder(ReceiveActivity.this)
+                    new AlertDialog.Builder(ReceiveActivity.this)
                             .setMessage(R.string.alert_file_exists_msg)
                             .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                                 @Override

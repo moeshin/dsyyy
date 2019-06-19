@@ -57,7 +57,7 @@ public class SettingFragment extends PreferenceFragment
             final PreferenceScreen preferenceScreen,
             final Preference preference
     ) {
-        if ("path".equals(preference.getKey())) {
+        if (SettingUtils.KEY_PATH.equals(preference.getKey())) {
             DirectorySelectorDialog.show(getActivity(),
                     new DirectorySelectorDialog.onSelectListener() {
                 @Override
@@ -76,7 +76,6 @@ public class SettingFragment extends PreferenceFragment
 
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
-        Log.d(TAG, "onPreferenceChange: " + preference.getKey());
         preference.setSummary((String) newValue);
         return true;
     }
