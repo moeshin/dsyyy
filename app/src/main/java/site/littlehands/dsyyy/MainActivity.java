@@ -19,10 +19,14 @@ public class MainActivity extends BaseActivity {
         requestPermissions(new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE});
 
         // Test
+//        String test = "分享M.Graveyard的专辑《ずっと、ふたり。》: http://music.163.com/album/34678333/?userid=412128285 (来自@网易云音乐)";
+//        String test = "分享歌手M.Graveyard http://music.163.com/artist?id=20579&userid=412128285　(来自@网易云音乐)";
+//        String test = "分享M.Graveyard的单曲《Hope》: http://music.163.com/song/28306025/?userid=412128285 (来自@网易云音乐)";
+//        String test = "分享Littlehands创建的歌单「hope」: http://music.163.com/playlist/2673407205/412128285/?userid=412128285 (来自@网易云音乐)";
 //        Intent intent = new Intent(this, ReceiveActivity.class)
 //                .setAction(Intent.ACTION_SEND)
 //                .setType("text/plain")
-//                .putExtra(Intent.EXTRA_TEXT, "分享Roger Subirana的单曲《Between Worlds》: http://music.163.com/song/28661549/?userid=412128285 (来自@网易云音乐)");
+//                .putExtra(Intent.EXTRA_TEXT, test);
 //        startActivity(intent);
     }
 
