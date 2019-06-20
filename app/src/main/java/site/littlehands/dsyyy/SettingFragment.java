@@ -28,7 +28,8 @@ public class SettingFragment extends PreferenceFragment
         String path = sharedPreferences.getString(SettingUtils.KEY_PATH, null);
 
         if (path == null) {
-            path = Environment.getExternalStorageDirectory().getPath();
+            path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
+                    .getPath();
 
             SharedPreferences.Editor editor = getPreferenceScreen().getEditor();
             editor.putString(SettingUtils.KEY_PATH, path);
