@@ -1,11 +1,11 @@
-package site.littlehands.util;
+package site.littlehands.dsyyy.util;
 
 import android.annotation.SuppressLint;
 
 @SuppressLint("DefaultLocale")
 public class UnitSelector {
 
-    private static final String FORMAT = "%.2f %s";
+    private static final String FORMAT = "%.0f %s";
 
     private static final String[] BIT_RATE_UNITS = new String[]{
             "bps", "kbps", "Mbps", "Gbps", "Tbps"
@@ -16,27 +16,27 @@ public class UnitSelector {
     };
 
 
-    public static String bitRate(double bitRate) {
+    public static String br(double br) {
         int i = 0;
 
-        while (bitRate >= 1000) {
-            bitRate /= 1000;
+        while (br >= 1000) {
+            br /= 1000;
             i++;
         }
 
-        return String.format(FORMAT, bitRate, BIT_RATE_UNITS[i]);
+        return String.format(FORMAT, br, BIT_RATE_UNITS[i]);
     }
 
-    public static String bitRate(double bitRate, int index) {
+    public static String br(double br, int index) {
 
         for (int i = 0; i < index; i++) {
-            bitRate /= 1000;
+            br /= 1000;
         }
 
-        return String.format(FORMAT, bitRate, BIT_RATE_UNITS[index]);
+        return String.format(FORMAT, br, BIT_RATE_UNITS[index]);
     }
 
-    public static String Byte(double Byte) {
+    public static String size(double Byte) {
         int i = 0;
 
         while (Byte >= 1024) {
@@ -47,7 +47,7 @@ public class UnitSelector {
         return String.format(FORMAT, Byte, BYTE_UNITS[i]);
     }
 
-    public static String Byte(double Byte, int index) {
+    public static String size(double Byte, int index) {
 
         for (int i = 0; i < index; i++) {
             Byte /= 1024;

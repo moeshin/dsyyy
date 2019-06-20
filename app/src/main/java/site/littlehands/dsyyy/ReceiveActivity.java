@@ -32,7 +32,7 @@ import okhttp3.Request;
 import okhttp3.ResponseBody;
 import site.littlehands.app.DirectorySelectorDialog;
 import site.littlehands.util.NeteaseMusicAPI;
-import site.littlehands.util.UnitSelector;
+import site.littlehands.dsyyy.util.UnitSelector;
 
 public class ReceiveActivity extends Activity {
 
@@ -249,8 +249,8 @@ public class ReceiveActivity extends Activity {
                     editText.setText(fileName);
                     pathView.setText(path);
                     pathView.setOnClickListener(onPathViewClick);
-                    brView.setText(getString(R.string.format_br, UnitSelector.bitRate(br)));
-                    sizeView.setText(getString(R.string.format_size, UnitSelector.Byte(size)));
+                    brView.setText(getString(R.string.format_br, UnitSelector.br(br)));
+                    sizeView.setText(getString(R.string.format_size, UnitSelector.size(size)));
 
                     new AlertDialog.Builder(ReceiveActivity.this)
                             .setTitle(R.string.alert_confirm_name_msg)
