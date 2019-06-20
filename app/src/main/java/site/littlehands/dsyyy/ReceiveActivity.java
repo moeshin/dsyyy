@@ -45,6 +45,9 @@ public class ReceiveActivity extends Activity {
 
     private String format;
 
+    private final Pattern pattern = Pattern
+            .compile("(?:http|https)://music.163.com/(.*?)(?:/|\\?id=)(.*?)[/&]");
+
     private final DialogInterface.OnClickListener onCancel = new DialogInterface.OnClickListener() {
         @Override
         public void onClick(DialogInterface dialog, int which) {
@@ -87,19 +90,34 @@ public class ReceiveActivity extends Activity {
 
                 Log.d(TAG, "Text: " + text);
 
-                Pattern pattern = Pattern.compile("/song/(\\d+)/");
-                Matcher matcher = pattern.matcher(text);
-
-                if (matcher.find()) {
-                    String id = matcher.group(1);
-                    Log.d(TAG, "ID: " + id);
-                    handleId(id);
+                if (handleSharedText(text)) {
                     return;
                 }
             }
         }
 
         startActivity(new Intent(this, MainActivity.class));
+    }
+
+    private boolean handleSharedText(String text) {
+        Matcher matcher = pattern.matcher(text);
+
+        if (!matcher.find()) {
+            return false;
+        }
+
+        String type = matcher.group(1);
+        String id = matcher.group(2);
+        Log.d(TAG, "ID: " + id);
+
+        //noinspection SwitchStatementWithTooFewBranches
+        switch (type) {
+            case "song":
+                handleId(id);
+                break;
+            // TODO Will support more shared text type
+        }
+        return true;
     }
 
     private void handleId(final String id) {
