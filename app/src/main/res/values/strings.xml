@@ -12,7 +12,8 @@
     <string name="setting_isConfirm_off">每次下载前不会提示确认</string>
     <string name="setting_isConfirm_on">每次下载前都会提示确认</string>
 
-    <string name="alert_confirm_name_msg">请确认，可自行修改：</string>
+    <string name="alert_confirm_msg">请确认，可自行修改：</string>
+    <string name="alert_confirm_path">请确认下载路径：</string>
     <string name="alert_file_exists_msg">文件已存在是否覆盖？</string>
     <string name="alert_loading">加载中。。。</string>
     <string name="alert_delete_fail">删除失败</string>
@@ -28,5 +29,9 @@
 
     <string name="format_br">比特率：%s</string>
     <string name="format_size">大小：%s</string>
+
+    <string name="downloading">下载中</string>
+
+    <string name="parsing_rate">解析中 %d/%d</string>
 
 </resources>

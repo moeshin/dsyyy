@@ -16,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,11 +40,17 @@ public class ReceiveActivity extends Activity {
 
     private String TAG = "ReceiveActivity";
 
-    private SharedPreferences preferences;
-
     private boolean isConfirm;
 
+    private boolean isSingle;
+
     private String format;
+
+    private String downloadPath;
+
+    private AlertDialog loadingDialog;
+
+    private TextView loadingMessage;
 
     private final Pattern pattern = Pattern
             .compile("(?:http|https)://music.163.com/(.*?)(?:/|\\?id=)(.*?)[/&]");
@@ -76,10 +83,13 @@ public class ReceiveActivity extends Activity {
         String action = intent.getAction();
         String type = intent.getType();
 
-        preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         isConfirm = preferences.getBoolean("isConfirm", true);
         format = preferences.getString(SettingUtils.KEY_FORMAT, SettingUtils.FORMAT_DEFAULT);
-
+        downloadPath = preferences.getString(SettingUtils.KEY_PATH, null);
+        if (downloadPath == null) {
+            downloadPath = Environment.getExternalStorageDirectory().getPath();
+        }
 
         // 获取分享文本
         Log.d(TAG, "Action: " + action);
@@ -106,38 +116,143 @@ public class ReceiveActivity extends Activity {
             return false;
         }
 
-        String type = matcher.group(1);
-        String id = matcher.group(2);
+        final String type = matcher.group(1);
+        final long id = Long.valueOf(matcher.group(2));
         Log.d(TAG, "ID: " + id);
 
-        //noinspection SwitchStatementWithTooFewBranches
-        switch (type) {
-            case "song":
-                handleId(id);
-                break;
-            // TODO Will support more shared text type
-        }
-        return true;
-    }
-
-    private void handleId(final String id) {
         @SuppressLint("InflateParams")
-        final AlertDialog alertDialog = new AlertDialog.Builder(this)
-                .setView(getLayoutInflater().inflate(R.layout.alert_loading, null))
+        View view = getLayoutInflater().inflate(R.layout.alert_loading, null);
+        loadingMessage = view.findViewById(R.id.message);
+        loadingDialog = new AlertDialog.Builder(this)
+                .setView(view)
                 .setCancelable(false)
                 .show();
+
         new Thread(new Runnable() {
             @Override
             public void run() {
-                handleDetails(httpGetString(NeteaseMusicAPI.details(id)));
+                try {
+                    isSingle = false;
+                    if ("song".equals(type)) {
+                        isSingle = true;
+                        handleId(id);
+                    } else {
+                        if (isConfirm) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    confirmPath(type, id);
+                                }
+                            });
+                        } else {
+                            switchType(type, id);
+                        }
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+        return true;
+    }
+
+    private void handleId(long ...ids) throws JSONException {
+        String string = httpGetString(NeteaseMusicAPI.details(ids));
+        if (string == null) {
+            alertNetworkError();
+            return;
+        }
+        JSONObject json = new JSONObject(string);
+        JSONArray songs = json.getJSONArray("songs");
+
+        int length = songs.length();
+        for (int i = 0; i < length; i++) {
+            try {
+                JSONObject song = songs.getJSONObject(i);
+                preDownload(
+                        song.getInt("id"),
+                        song.getString("name"),
+                        NeteaseMusicAPI.artistsToString(song, "ar"),
+                        song.getJSONObject("al").getString("name")
+                );
+            } catch (JSONException e) {
+                e.printStackTrace();
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        alertDialog.dismiss();
+                        alertNetworkError();
                     }
                 });
             }
-        }).start();
+        }
+    }
+
+    private void handleList(long id) throws JSONException {
+        String string = httpGetString(NeteaseMusicAPI.list(id));
+        if (string == null) {
+            alertNetworkError();
+            return;
+        }
+        JSONArray trackIds = new JSONObject(string)
+                .getJSONObject("playlist")
+                .getJSONArray("trackIds");
+        int length = trackIds.length();
+        for (int i = 0; i < length; i++) {
+            parsing(i, length);
+            try {
+                handleId(trackIds.getJSONObject(i).getInt("id"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void handleArtist(long id) throws JSONException {
+        String string = httpGetString(NeteaseMusicAPI.artist(id));
+        if (string == null) {
+            alertNetworkError();
+            return;
+        }
+        JSONArray hotSongs = new JSONObject(string).getJSONArray("hotSongs");
+        int length = hotSongs.length();
+        for (int i = 0; i < length; i++) {
+            parsing(i, length);
+            try {
+                JSONObject song = hotSongs.getJSONObject(i);
+                preDownload(
+                        song.getInt("id"),
+                        song.getString("name"),
+                        NeteaseMusicAPI.artistsToString(song, "artists"),
+                        song.getJSONObject("album").getString("name")
+                );
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void handleAlbum(long id) throws JSONException {
+        String string = httpGetString(NeteaseMusicAPI.album(id));
+        if (string == null) {
+            alertNetworkError();
+            return;
+        }
+        JSONArray songs = new JSONObject(string).getJSONArray("songs");
+        int length = songs.length();
+        for (int i = 0; i < length; i++) {
+            parsing(i, length);
+            try {
+                JSONObject song = songs.getJSONObject(i);
+                preDownload(
+                        song.getInt("id"),
+                        song.getString("name"),
+                        NeteaseMusicAPI.artistsToString(song, "ar"),
+                        song.getJSONObject("al").getString("name")
+                );
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public String httpGetString(String url) {
@@ -156,59 +271,31 @@ public class ReceiveActivity extends Activity {
         return null;
     }
 
-    @SuppressWarnings("UnnecessaryContinue")
-    private void handleDetails(String details) {
-        if (details == null) {
-            new AlertDialog.Builder(ReceiveActivity.this)
-                    .setMessage(R.string.network_error)
-                    .setPositiveButton(android.R.string.ok, onCancel)
-                    .setCancelable(false)
-                    .show();
-            return;
-        }
-        try {
-            JSONObject json = new JSONObject(details);
-            JSONArray songs = json.getJSONArray("songs");
-
-            int length = songs.length();
-            for (int i = 0; i < length; i++) {
-                try {
-                    JSONObject song = songs.getJSONObject(i);
-                    String name = song.getString("name");
-                    String artists = NeteaseMusicAPI.artistsToString(song);
-                    String album = song.getJSONObject("al").getString("name");
-                    int id = song.getInt("id");
-
-
-                    JSONObject data = new JSONObject(httpGetString(NeteaseMusicAPI.urls(9999999, id)))
-                            .getJSONArray("data")
-                            .getJSONObject(0);
-
-                    String url = data.getString("url");
-                    int br = data.getInt("br");
-                    int size = data.getInt("size");
-
-                    preDownload(
-                            url,
-                            br,
-                            size,
-                            name,
-                            artists,
-                            album
-                    );
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    continue;
-                }
-
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+    public void alertNetworkError() {
+        new AlertDialog.Builder(ReceiveActivity.this)
+                .setMessage(R.string.network_error)
+                .setPositiveButton(android.R.string.ok, onCancel)
+                .setCancelable(false)
+                .show();
     }
 
     private String getSuffix(String str) {
         return str.substring(str.lastIndexOf('.'));
+    }
+
+    private void preDownload(long id, String name, String artist, String album) throws JSONException {
+        Log.d(TAG, "preDownload: " + NeteaseMusicAPI.urls(9999999, id));
+        JSONObject data = new JSONObject(httpGetString(NeteaseMusicAPI.urls(9999999, id)))
+                .getJSONArray("data")
+                .getJSONObject(0);
+        preDownload(
+                data.getString("url"),
+                data.getInt("br"),
+                data.getInt("size"),
+                name,
+                artist,
+                album
+        );
     }
 
     private void preDownload(
@@ -216,22 +303,13 @@ public class ReceiveActivity extends Activity {
             final String name, String artist, String album
     ) {
 
-
-        String tmp = preferences.getString(SettingUtils.KEY_PATH, null);
-
-        if (tmp == null) {
-            tmp = Environment.getExternalStorageDirectory().getPath();
-        }
-
-        final String path = tmp;
-
         final String fileName = SettingUtils.format(Objects.requireNonNull(format),
                 name.replace('/', '／'),
                 artist.replace('/', '／'),
                 album.replace('/', '／')
         ) + getSuffix(url);
 
-        if (isConfirm) {
+        if (isConfirm && isSingle) {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -239,7 +317,7 @@ public class ReceiveActivity extends Activity {
                     @SuppressLint("InflateParams")
                     final View view = LayoutInflater
                             .from(ReceiveActivity.this)
-                            .inflate(R.layout.alert_confirm, null);
+                            .inflate(R.layout.alert_confirm_single, null);
 
                     final EditText editText = view.findViewById(R.id.edit);
                     final TextView pathView = view.findViewById(R.id.path);
@@ -247,13 +325,13 @@ public class ReceiveActivity extends Activity {
                     TextView sizeView = view.findViewById(R.id.size);
 
                     editText.setText(fileName);
-                    pathView.setText(path);
+                    pathView.setText(downloadPath);
                     pathView.setOnClickListener(onPathViewClick);
                     brView.setText(getString(R.string.format_br, UnitSelector.br(br)));
                     sizeView.setText(getString(R.string.format_size, UnitSelector.size(size)));
 
                     new AlertDialog.Builder(ReceiveActivity.this)
-                            .setTitle(R.string.alert_confirm_name_msg)
+                            .setTitle(R.string.alert_confirm_msg)
                             .setView(view)
                             .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                                 @Override
@@ -274,7 +352,7 @@ public class ReceiveActivity extends Activity {
                 }
             });
         } else {
-            confirmPath(url, path, fileName);
+            confirmPath(url, downloadPath, fileName);
         }
 
     }
@@ -285,17 +363,21 @@ public class ReceiveActivity extends Activity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    new AlertDialog.Builder(ReceiveActivity.this)
-                            .setMessage(R.string.alert_file_exists_msg)
-                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(final DialogInterface alertDialog, final int which1) {
-                                    overwrite(url, file, name);
-                                }
-                            })
-                            .setNegativeButton(android.R.string.no, onCancel)
-                            .setCancelable(false)
-                            .show();
+                    if (isSingle) {
+                        new AlertDialog.Builder(ReceiveActivity.this)
+                                .setMessage(R.string.alert_file_exists_msg)
+                                .setPositiveButton(android.R.string.yes,
+                                        new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(final DialogInterface alertDialog,
+                                                                final int which) {
+                                                overwrite(url, file, name);
+                                            }
+                                        })
+                                .setNegativeButton(android.R.string.no, onCancel)
+                                .setCancelable(false)
+                                .show();
+                    }
                 }
             });
         } else {
@@ -331,7 +413,80 @@ public class ReceiveActivity extends Activity {
                 .setTitle(getString(R.string.app_name))
                 .setDescription(name);
         manager.enqueue(request);
+        if (isSingle) {
+            downloading();
+        }
+    }
+
+    private void switchType(String type, long id) throws JSONException {
+        switch (type) {
+            case "playlist":
+                handleList(id);
+                break;
+            case "artist":
+                handleArtist(id);
+                break;
+            case "album":
+                handleAlbum(id);
+                break;
+        }
+        downloading();
+    }
+
+    private void confirmPath(final String type, final long id) {
+
+        @SuppressLint("InflateParams")
+        View view = LayoutInflater
+                .from(ReceiveActivity.this)
+                .inflate(R.layout.alert_confirm_path, null);
+        final TextView pathView = view.findViewById(R.id.path);
+        pathView.setText(downloadPath);
+        pathView.setOnClickListener(onPathViewClick);
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.alert_confirm_path)
+                .setView(view)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                downloadPath = pathView.getText().toString();
+                                try {
+                                    switchType(type, id);
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }).start();
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, onCancel)
+                .setCancelable(false)
+                .show();
+    }
+
+    private void downloading() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (loadingDialog != null) {
+                    loadingDialog.dismiss();
+                }
+                Toast.makeText(ReceiveActivity.this, R.string.downloading, Toast.LENGTH_SHORT).show();
+            }
+        });
         finish();
+    }
+
+    private void parsing(final int current, final int count) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                loadingMessage.setText(getString(R.string.parsing_rate, current, count));
+            }
+        });
     }
 
 }
