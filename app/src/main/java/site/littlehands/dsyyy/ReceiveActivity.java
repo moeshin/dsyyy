@@ -23,17 +23,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.ResponseBody;
 import site.littlehands.app.DirectorySelectorDialog;
-import site.littlehands.util.NeteaseMusicAPI;
 import site.littlehands.dsyyy.util.UnitSelector;
+import site.littlehands.ncmapi.NCMAPI;
+import site.littlehands.ncmapi.ParseArtists;
+import site.littlehands.ncmapi.ParseShareInfo;
 
 public class ReceiveActivity extends Activity {
 
@@ -51,9 +47,6 @@ public class ReceiveActivity extends Activity {
     private AlertDialog loadingDialog;
 
     private TextView loadingMessage;
-
-    private final Pattern pattern = Pattern
-            .compile("(?:http|https)://music.163.com/(.*?)(?:/|\\?id=)(.*?)[/&]");
 
     private final DialogInterface.OnClickListener onCancel = new DialogInterface.OnClickListener() {
         @Override
@@ -110,15 +103,13 @@ public class ReceiveActivity extends Activity {
     }
 
     private boolean handleSharedText(String text) {
-        Matcher matcher = pattern.matcher(text);
-
-        if (!matcher.find()) {
+        final ParseShareInfo shareInfo = ParseShareInfo.parse(text);
+        if (shareInfo.getType() == ParseShareInfo.Type.UNDEFINED) {
             return false;
         }
-
-        final String type = matcher.group(1);
-        final long id = Long.valueOf(matcher.group(2));
-        Log.d(TAG, "ID: " + id);
+        final long id = shareInfo.getId();
+        final int type = shareInfo.getType();
+        Log.d(TAG, "ID: " + shareInfo.getId());
 
         @SuppressLint("InflateParams")
         View view = getLayoutInflater().inflate(R.layout.alert_loading, null);
@@ -132,9 +123,8 @@ public class ReceiveActivity extends Activity {
             @Override
             public void run() {
                 try {
-                    isSingle = false;
-                    if ("song".equals(type)) {
-                        isSingle = true;
+                    isSingle = type == ParseShareInfo.Type.SONG;
+                    if (isSingle) {
                         handleId(id);
                     } else {
                         if (isConfirm) {
@@ -148,7 +138,7 @@ public class ReceiveActivity extends Activity {
                             switchType(type, id);
                         }
                     }
-                } catch (JSONException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -156,8 +146,8 @@ public class ReceiveActivity extends Activity {
         return true;
     }
 
-    private void handleId(long ...ids) throws JSONException {
-        String string = httpGetString(NeteaseMusicAPI.details(ids));
+    private void handleId(long ...ids) throws Exception {
+        String string = NCMAPI.detail(ids);
         if (string == null) {
             alertNetworkError();
             return;
@@ -172,7 +162,7 @@ public class ReceiveActivity extends Activity {
                 preDownload(
                         song.getInt("id"),
                         song.getString("name"),
-                        NeteaseMusicAPI.artistsToString(song, "ar"),
+                        ParseArtists.toString(song, "ar"),
                         song.getJSONObject("al").getString("name")
                 );
             } catch (JSONException e) {
@@ -187,8 +177,8 @@ public class ReceiveActivity extends Activity {
         }
     }
 
-    private void handleList(long id) throws JSONException {
-        String string = httpGetString(NeteaseMusicAPI.list(id));
+    private void handleList(long id) throws Exception {
+        String string = NCMAPI.playlist(id);
         if (string == null) {
             alertNetworkError();
             return;
@@ -207,8 +197,8 @@ public class ReceiveActivity extends Activity {
         }
     }
 
-    private void handleArtist(long id) throws JSONException {
-        String string = httpGetString(NeteaseMusicAPI.artist(id));
+    private void handleArtist(long id) throws Exception {
+        String string = NCMAPI.artist(id);
         if (string == null) {
             alertNetworkError();
             return;
@@ -222,7 +212,7 @@ public class ReceiveActivity extends Activity {
                 preDownload(
                         song.getInt("id"),
                         song.getString("name"),
-                        NeteaseMusicAPI.artistsToString(song, "artists"),
+                        ParseArtists.toString(song, "artists"),
                         song.getJSONObject("album").getString("name")
                 );
             } catch (JSONException e) {
@@ -231,8 +221,8 @@ public class ReceiveActivity extends Activity {
         }
     }
 
-    private void handleAlbum(long id) throws JSONException {
-        String string = httpGetString(NeteaseMusicAPI.album(id));
+    private void handleAlbum(long id) throws Exception {
+        String string = NCMAPI.album(id);
         if (string == null) {
             alertNetworkError();
             return;
@@ -246,29 +236,13 @@ public class ReceiveActivity extends Activity {
                 preDownload(
                         song.getInt("id"),
                         song.getString("name"),
-                        NeteaseMusicAPI.artistsToString(song, "ar"),
+                        ParseArtists.toString(song, "ar"),
                         song.getJSONObject("al").getString("name")
                 );
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
-    }
-
-    public String httpGetString(String url) {
-        try {
-            OkHttpClient okHttpClient = new OkHttpClient();
-            Request request = new Request.Builder()
-                    .url(url)
-                    .build();
-            ResponseBody body = okHttpClient.newCall(request).execute().body();
-            if (body != null) {
-                return body.string();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     public void alertNetworkError() {
@@ -283,9 +257,8 @@ public class ReceiveActivity extends Activity {
         return str.substring(str.lastIndexOf('.'));
     }
 
-    private void preDownload(long id, String name, String artist, String album) throws JSONException {
-        Log.d(TAG, "preDownload: " + NeteaseMusicAPI.urls(9999999, id));
-        JSONObject data = new JSONObject(httpGetString(NeteaseMusicAPI.urls(9999999, id)))
+    private void preDownload(long id, String name, String artist, String album) throws Exception {
+        JSONObject data = new JSONObject(NCMAPI.url(9999999, id))
                 .getJSONArray("data")
                 .getJSONObject(0);
         preDownload(
@@ -405,6 +378,7 @@ public class ReceiveActivity extends Activity {
     }
 
     private void download(String url, File file, String name) {
+        Log.d(TAG, "download: " + url);
         Uri uri = Uri.fromFile(file);
         DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url))
@@ -418,22 +392,22 @@ public class ReceiveActivity extends Activity {
         }
     }
 
-    private void switchType(String type, long id) throws JSONException {
+    private void switchType(int type, long id) throws Exception {
         switch (type) {
-            case "playlist":
+            case ParseShareInfo.Type.PLAYLIST:
                 handleList(id);
                 break;
-            case "artist":
+            case ParseShareInfo.Type.ARTIST:
                 handleArtist(id);
                 break;
-            case "album":
+            case ParseShareInfo.Type.ALBUM:
                 handleAlbum(id);
                 break;
         }
         downloading();
     }
 
-    private void confirmPath(final String type, final long id) {
+    private void confirmPath(final int type, final long id) {
 
         @SuppressLint("InflateParams")
         View view = LayoutInflater
@@ -455,7 +429,7 @@ public class ReceiveActivity extends Activity {
                                 downloadPath = pathView.getText().toString();
                                 try {
                                     switchType(type, id);
-                                } catch (JSONException e) {
+                                } catch (Exception e) {
                                     e.printStackTrace();
                                 }
                             }

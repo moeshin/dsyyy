@@ -28,5 +28,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
-    implementation("com.squareup.okhttp3:okhttp:3.12.3")
+    implementation("site.littlehands.ncmapi:ncmapi:1.0.1") {
+        exclude group: 'org.json', module: 'json'
+    }
 }
