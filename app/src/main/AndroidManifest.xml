@@ -17,14 +17,14 @@
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="Android:allowBackup">
 
-        <activity android:name=".MainActivity">
+        <activity android:name=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".ReceiveActivity">
+        <activity android:name=".ui.ReceiveActivity">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />

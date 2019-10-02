@@ -1,12 +1,12 @@
-package site.littlehands.dsyyy;
+package site.littlehands.dsyyy.util;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-class SettingUtils {
+public class SettingUtils {
 
-    static final String KEY_PATH = "path";
-    static final String KEY_FORMAT = "format";
+    public static final String KEY_PATH = "path";
+    public static final String KEY_FORMAT = "format";
 
     private static final String MARK_SONG = "%name%";
     private static final String MARK_AUTHOR = "%artist%";
@@ -14,9 +14,9 @@ class SettingUtils {
 
     private static final Pattern PATTERN = Pattern.compile("%[a-z]*%");
 
-    static final String FORMAT_DEFAULT = "%name% - %artist%";
+    public static final String FORMAT_DEFAULT = "%name% - %artist%";
 
-    static String format(String format, String song, String author, String album) {
+    public static String format(String format, String song, String author, String album) {
 
         Matcher matcher = PATTERN.matcher(format);
 

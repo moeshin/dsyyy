@@ -1,4 +1,4 @@
-package site.littlehands.dsyyy;
+package site.littlehands.dsyyy.ui;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -13,7 +13,10 @@ import androidx.annotation.Nullable;
 
 import java.io.File;
 
-import site.littlehands.app.DirectorySelectorDialog;
+import site.littlehands.dsyyy.BuildConfig;
+import site.littlehands.dsyyy.R;
+import site.littlehands.dsyyy.widget.DirectorySelectorDialog;
+import site.littlehands.dsyyy.util.SettingUtils;
 
 public class SettingFragment extends PreferenceFragment
         implements Preference.OnPreferenceChangeListener {

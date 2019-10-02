@@ -36,4 +36,6 @@
 
     <string name="parsing_rate">解析中 %d/%d</string>
 
+    <string name="do_not_run_download_manager">无法启动下载管理器</string>
+
 </resources>

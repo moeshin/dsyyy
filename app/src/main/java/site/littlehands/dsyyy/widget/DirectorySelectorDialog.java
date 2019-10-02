@@ -1,4 +1,4 @@
-package site.littlehands.app;
+package site.littlehands.dsyyy.widget;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -23,6 +23,7 @@ import java.util.List;
 
 import site.littlehands.dsyyy.R;
 
+@SuppressWarnings({"WeakerAccess", "UnusedReturnValue", "unused"})
 public class DirectorySelectorDialog extends AlertDialog
         implements AdapterView.OnItemClickListener, DialogInterface.OnClickListener {
 
@@ -35,8 +36,7 @@ public class DirectorySelectorDialog extends AlertDialog
         @SuppressWarnings("NullableProblems")
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            @SuppressLint("ViewHolder") View v = inflater.inflate(R.layout.directory_list_item, null);
+            @SuppressLint("ViewHolder") View v = View.inflate(getContext(), R.layout.directory_list_item, null);
 
             TextView name = v.findViewById(R.id.directory_name);
 
@@ -73,8 +73,6 @@ public class DirectorySelectorDialog extends AlertDialog
                 return (1);
             }
             switch (sort) {
-                case SORT_NAME:
-                    return order * lhs.getName().compareTo(rhs.getName());
                 case SORT_MODIFIED:
                     return (order * Long.compare(lhs.lastModified(), rhs.lastModified()));
                 default:
@@ -85,6 +83,7 @@ public class DirectorySelectorDialog extends AlertDialog
 
     }
 
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public static class Helper {
 
         private Context context;
@@ -245,7 +244,9 @@ public class DirectorySelectorDialog extends AlertDialog
         } else {
             current = file;
         }
-        list(current);
+        if (current != null) {
+            list(current);
+        }
     }
 
     public static DirectorySelectorDialog show(Context context, onSelectListener listener) {

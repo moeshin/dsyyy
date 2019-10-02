@@ -4,11 +4,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    tools:context=".ui.MainActivity">
 
     <fragment
         android:id="@+id/fragment"
-        android:name="site.littlehands.dsyyy.SettingFragment"
+        android:name="site.littlehands.dsyyy.ui.SettingFragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 </LinearLayout>

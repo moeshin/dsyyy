@@ -1,4 +1,4 @@
-package site.littlehands.dsyyy;
+package site.littlehands.dsyyy.ui;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -26,7 +26,9 @@ import org.json.JSONObject;
 import java.io.File;
 import java.util.Objects;
 
-import site.littlehands.app.DirectorySelectorDialog;
+import site.littlehands.dsyyy.R;
+import site.littlehands.dsyyy.widget.DirectorySelectorDialog;
+import site.littlehands.dsyyy.util.SettingUtils;
 import site.littlehands.dsyyy.util.UnitSelector;
 import site.littlehands.ncmapi.NCMAPI;
 import site.littlehands.ncmapi.ParseArtists;
@@ -388,7 +390,11 @@ public class ReceiveActivity extends Activity {
                 .setVisibleInDownloadsUi(true)
                 .setTitle(getString(R.string.app_name))
                 .setDescription(name);
-        manager.enqueue(request);
+        if (manager == null) {
+            Toast.makeText(this, R.string.do_not_run_download_manager, Toast.LENGTH_SHORT).show();
+        } else {
+            manager.enqueue(request);
+        }
         if (isSingle) {
             downloading();
         }

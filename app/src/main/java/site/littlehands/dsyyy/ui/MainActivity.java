@@ -1,11 +1,12 @@
-package site.littlehands.dsyyy;
+package site.littlehands.dsyyy.ui;
 
 import android.Manifest;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.KeyEvent;
 
-import site.littlehands.app.BaseActivity;
+import site.littlehands.dsyyy.R;
+import site.littlehands.dsyyy.ui.BaseActivity;
 
 public class MainActivity extends BaseActivity {
 
