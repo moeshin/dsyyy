@@ -378,6 +378,7 @@ public class ReceiveActivity extends Activity {
     }
 
     private void download(String url, File file, String name) {
+        url = useHTTPS(url);
         Log.d(TAG, "download: " + url);
         Uri uri = Uri.fromFile(file);
         DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
@@ -461,6 +462,15 @@ public class ReceiveActivity extends Activity {
                 loadingMessage.setText(getString(R.string.parsing_rate, current, count));
             }
         });
+    }
+
+    private String useHTTPS(String url) {
+        if (url.startsWith("http://")) {
+            StringBuilder sb =  new StringBuilder(url);
+            sb.insert(4, 's');
+            return sb.toString();
+        }
+        return url;
     }
 
 }
