@@ -1,8 +1,7 @@
-## [1.0.2](https://github.com/moeshin/dsyyy/compare/v1.0.1...v1.0.2) (2019-10-02)
+## [1.0.3](https://github.com/moeshin/dsyyy/compare/v1.0.2...v1.0.3) (2019-10-02)
 
 
-### Features
+### Bug Fixes
 
-* add tutorial ([0da29d8](https://github.com/moeshin/dsyyy/commit/0da29d8))
-* use HTTPS URL ([d365642](https://github.com/moeshin/dsyyy/commit/d365642))
+* android Q read sdcard ([71203aa](https://github.com/moeshin/dsyyy/commit/71203aa))
 
