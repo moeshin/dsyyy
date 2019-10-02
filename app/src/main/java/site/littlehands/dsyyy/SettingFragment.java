@@ -8,7 +8,8 @@ import android.os.Environment;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
-import android.support.annotation.Nullable;
+
+import androidx.annotation.Nullable;
 
 import java.io.File;
 
