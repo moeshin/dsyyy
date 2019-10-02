@@ -6,8 +6,9 @@ android {
         applicationId "site.littlehands.dsyyy"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 2
-        versionName "1.0.1"
+        versionCode 3
+        versionName "1.0.2"
+        version versionName
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         signingConfig signingConfigs.debug
     }
@@ -32,3 +33,5 @@ dependencies {
         exclude group: 'org.json', module: 'json'
     }
 }
+
+apply from: "git-changelog.gradle"
