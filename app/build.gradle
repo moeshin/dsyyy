@@ -19,6 +19,13 @@ android {
             shrinkResources = true
         }
     }
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            if (variant.buildType.name == 'release') {
+                outputFileName = "dsyyy-${defaultConfig.versionName}.apk"
+            }
+        }
+    }
 }
 
 dependencies {
