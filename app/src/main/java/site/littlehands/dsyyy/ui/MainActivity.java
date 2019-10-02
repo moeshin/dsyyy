@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.view.KeyEvent;
 
 import site.littlehands.dsyyy.R;
-import site.littlehands.dsyyy.ui.BaseActivity;
 
 public class MainActivity extends BaseActivity {
 
