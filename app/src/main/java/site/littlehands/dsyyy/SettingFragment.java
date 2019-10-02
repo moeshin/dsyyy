@@ -1,13 +1,14 @@
 package site.littlehands.dsyyy;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import java.io.File;
 
@@ -58,19 +59,32 @@ public class SettingFragment extends PreferenceFragment
             final PreferenceScreen preferenceScreen,
             final Preference preference
     ) {
-        if (SettingUtils.KEY_PATH.equals(preference.getKey())) {
-            DirectorySelectorDialog.show(getActivity(),
-                    new DirectorySelectorDialog.onSelectListener() {
-                @Override
-                public void onDirectorySelected(File directory) {
-                    String path = directory.getPath();
-                    preference.setSummary(path);
+        String key = preference.getKey();
+        if (key != null) {
+            switch (key) {
+                case SettingUtils.KEY_PATH:
+                    DirectorySelectorDialog.show(getActivity(),
+                            new DirectorySelectorDialog.onSelectListener() {
+                                @Override
+                                public void onDirectorySelected(File directory) {
+                                    String path = directory.getPath();
+                                    preference.setSummary(path);
 
-                    SharedPreferences.Editor editor = preferenceScreen.getEditor();
-                    editor.putString(SettingUtils.KEY_PATH, path);
-                    editor.commit();
-                }
-            });
+                                    SharedPreferences.Editor editor = preferenceScreen.getEditor();
+                                    editor.putString(SettingUtils.KEY_PATH, path);
+                                    editor.commit();
+                                }
+                            });
+                    break;
+                case "tutorial":
+                    openURL("https://github.com/moeshin/dsyyy/tree/master/tutorial/README.md");
+                    break;
+                case "version":
+                    openURL("https://github.com/moeshin/dsyyy/releases");
+                    break;
+                case "author":
+                    openURL("https://www.littlehands.site/");
+            }
         }
         return super.onPreferenceTreeClick(preferenceScreen, preference);
     }
@@ -79,6 +93,16 @@ public class SettingFragment extends PreferenceFragment
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         preference.setSummary((String) newValue);
         return true;
+    }
+
+    private void openURL(String url) {
+        Intent intent = new Intent()
+                .setAction("android.intent.action.VIEW")
+                .setData(Uri.parse(url))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                .setClassName("com.android.browser",
+                        "com.android.browser.BrowserActivity");
+        startActivity(intent);
     }
 
 }

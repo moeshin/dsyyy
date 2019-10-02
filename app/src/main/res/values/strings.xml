@@ -24,6 +24,8 @@
     <string name="version">版本</string>
     <string name="setting">设置</string>
     <string name="author">作者</string>
+    <string name="tutorial">教程</string>
+    <string name="tutorial_summary">正确的打开♂方法</string>
 
     <string name="network_error">网络错误</string>
 

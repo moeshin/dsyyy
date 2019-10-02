@@ -23,10 +23,15 @@
     <PreferenceCategory
         android:title="@string/about">
         <Preference
+            android:key="tutorial"
+            android:title="@string/tutorial"
+            android:summary="@string/tutorial_summary"/>
+        <Preference
             android:key="version"
             android:title="@string/version"
             android:summary="1.0.0"/>
         <Preference
+            android:key="author"
             android:title="@string/author"
             android:summary="小さな手は"/>
     </PreferenceCategory>
